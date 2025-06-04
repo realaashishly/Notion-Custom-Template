@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { CalendarEvent, Column, Task } from "@/lib/constant";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -30,6 +30,26 @@ const platforms = [
   { name: "YouTube", title: "YouTube" },
   { name: "X", title: "X" },
   { name: "Threads", title: "Threads" },
+];
+
+// Initial events from the calendar image
+const initialEvents: CalendarEvent[] = [
+  {
+    id: "1",
+    title: "New Content",
+    description: "",
+    date: "2025-05-27",
+    time: "09:00",
+    color: "#3b82f6",
+  },
+  {
+    id: "2",
+    title: "Research & Planning",
+    description: "",
+    date: "2025-05-27",
+    time: "14:00",
+    color: "#16a34a",
+  },
 ];
 
 const KanbanBoard: React.FC = () => {
@@ -44,14 +64,40 @@ const KanbanBoard: React.FC = () => {
     status: "",
   });
 
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  // Initialize events and selectedDate from localStorage or use initialEvents
+  const [events, setEvents] = useState<CalendarEvent[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedEvents = localStorage.getItem("calendarEvents");
+      return savedEvents ? JSON.parse(savedEvents) : initialEvents;
+    }
+    return initialEvents;
+  });
+
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("selectedDate") || "2025-05-27";
+    }
+    return "2025-05-27";
+  });
+
   const [selected, setSelected] = useState<string[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>("");
   const [showEventModal, setShowEventModal] = useState(false);
   const [targetColumnId, setTargetColumnId] = useState<string>("");
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [editingTask, setEditingTask] = useState<{ task: Task; columnId: string } | null>(null);
-  const [columns, setColumns] = useState<Column[]>(getInitialColumns());
+  const [columns, setColumns] = useState<Column[]>(() => {
+    const initialCols = getInitialColumns();
+    // Initialize columns with tasks from the calendar events
+    const tasksFromEvents = initialEvents.map((event) => ({
+      id: event.id,
+      title: event.title,
+      platform: undefined,
+      status: undefined,
+    }));
+    return initialCols.map((col, index) =>
+      index === 0 ? { ...col, tasks: tasksFromEvents } : col
+    );
+  });
   const [draggedTask, setDraggedTask] = useState<{
     task: Task;
     sourceColumnId: string;
@@ -84,8 +130,17 @@ const KanbanBoard: React.FC = () => {
     taskId: string;
   } | null>(null);
 
+  // Persist events and selectedDate to localStorage
+  useEffect(() => {
+    localStorage.setItem("calendarEvents", JSON.stringify(events));
+  }, [events]);
+
+  useEffect(() => {
+    localStorage.setItem("selectedDate", selectedDate);
+  }, [selectedDate]);
+
   const handleAddEvent = () => {
-    if (!newEvent.title.trim()) return;
+    if (!newEvent.title.trim() || !selectedDate) return;
 
     const event: CalendarEvent = {
       id: Date.now().toString(),
@@ -98,7 +153,7 @@ const KanbanBoard: React.FC = () => {
     setEvents([...events, event]);
 
     const newTask: Task = {
-      id: Date.now().toString(),
+      id: event.id,
       title: newEvent.title,
       platform: newEvent.platform1 || (selected.length > 0 ? selected[0] : undefined),
       status: newEvent.status || undefined,
@@ -126,11 +181,13 @@ const KanbanBoard: React.FC = () => {
   };
 
   const handleUpdateEvent = () => {
-    if (!newEvent.title.trim()) return;
+    if (!newEvent.title.trim() || !selectedDate) return;
 
     if (editingEvent) {
       const updatedEvents = events.map((event) =>
-        event.id === editingEvent.id ? { ...event, ...newEvent } : event
+        event.id === editingEvent.id
+          ? { ...event, ...newEvent, date: selectedDate }
+          : event
       );
       setEvents(updatedEvents);
     }
@@ -155,6 +212,23 @@ const KanbanBoard: React.FC = () => {
             : col
         )
       );
+
+      // Update the corresponding event if it exists
+      const correspondingEvent = events.find((event) => event.id === editingTask.task.id);
+      if (correspondingEvent) {
+        const updatedEvents = events.map((event) =>
+          event.id === editingTask.task.id
+            ? {
+                ...event,
+                title: newEvent.title,
+                date: selectedDate,
+                time: newEvent.time,
+                color: newEvent.color,
+              }
+            : event
+        );
+        setEvents(updatedEvents);
+      }
     }
 
     setNewEvent({
@@ -300,7 +374,7 @@ const KanbanBoard: React.FC = () => {
       color: "#3b82f6",
       platform1: "",
       platform2: "",
-      date: "",
+      date: selectedDate,
       status: "",
     });
     setSelected([]);
@@ -310,14 +384,15 @@ const KanbanBoard: React.FC = () => {
     setEditingTask({ task, columnId });
     setTargetColumnId(columnId);
     setShowEventModal(true);
+    const correspondingEvent = events.find((event) => event.id === task.id);
     setNewEvent({
       title: task.title,
-      description: "",
-      time: "",
-      color: "#3b82f6",
+      description: correspondingEvent?.description || "",
+      time: correspondingEvent?.time || "",
+      color: correspondingEvent?.color || "#3b82f6",
       platform1: task.platform || "",
       platform2: "",
-      date: "",
+      date: selectedDate,
       status: task.status || "",
     });
     setSelected(task.platform ? [task.platform] : []);
@@ -347,6 +422,7 @@ const KanbanBoard: React.FC = () => {
         col.id === columnId ? { ...col, tasks: col.tasks.filter((task) => task.id !== taskId) } : col
       )
     );
+    setEvents((prevEvents) => prevEvents.filter((event) => event.id !== taskId));
     setTaskToDelete(null);
   };
 
@@ -367,11 +443,23 @@ const KanbanBoard: React.FC = () => {
   };
 
   const getAllTasks = () => {
-    const allTasks: (Task & { status: string })[] = [];
+    const allTasks: (Task & { status: string; date: string; time?: string })[] = [];
     columns.forEach((column) => {
       const statusName = column.title.replace(/^[^\s]*\s/, "");
       column.tasks.forEach((task) => {
-        allTasks.push({ ...task, status: statusName });
+        const event = events.find((e) => e.id === task.id);
+        const taskDate = event ? new Date(event.date) : new Date(selectedDate);
+        const formattedDate = taskDate.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        allTasks.push({
+          ...task,
+          status: statusName,
+          date: formattedDate,
+          time: event?.time,
+        });
       });
     });
     return allTasks.sort((a, b) => a.title.localeCompare(b.title));
@@ -393,7 +481,7 @@ const KanbanBoard: React.FC = () => {
       color: "#3b82f6",
       platform1: "",
       platform2: "",
-      date: "",
+      date: selectedDate,
       status: "",
     });
     setSelected([]);
@@ -537,13 +625,16 @@ const KanbanBoard: React.FC = () => {
                                           <th className='text-left p-3 font-medium text-zinc-300'>
                                               Date
                                           </th>
+                                          <th className='text-left p-3 font-medium text-zinc-300'>
+                                              Time
+                                          </th>
                                           <th className='text-center p-3 font-medium text-zinc-300'>
                                               Status
                                           </th>
                                       </tr>
                                   </thead>
                                   <tbody>
-                                      {getAllTasks().map((task, index) => (
+                                      {getAllTasks().map((task) => (
                                           <tr
                                               key={task.id}
                                               className='border-b border-zinc-700 hover:bg-zinc-700 transition-colors'
@@ -599,7 +690,10 @@ const KanbanBoard: React.FC = () => {
                                                       )}
                                               </td>
                                               <td className='p-3 text-zinc-300'>
-                                                  December {10 + index}, 2024
+                                                  {task.date}
+                                              </td>
+                                              <td className='p-3 text-zinc-300'>
+                                                  {task.time || "N/A"}
                                               </td>
                                               <td className='p-3 text-center'>
                                                   <span
@@ -622,13 +716,13 @@ const KanbanBoard: React.FC = () => {
                                                               : "bg-purple-600 text-purple-100"
                                                       }`}
                                                   >
-                                                      {task.status}
+                                                      {task.status || "N/A"}
                                                   </span>
                                               </td>
                                           </tr>
                                       ))}
                                       <tr className='border-t border-zinc-700'>
-                                          <td className='p-3' colSpan={6}>
+                                          <td className='p-3' colSpan={7}>
                                               <div
                                                   className='flex items-center space-x-2 cursor-pointer hover:bg-zinc-800 rounded px-3 py-2'
                                                   onClick={() =>
@@ -687,107 +781,116 @@ const KanbanBoard: React.FC = () => {
                                       onDragLeave={handleDragLeave}
                                       onDrop={(e) => handleDrop(e, column.id)}
                                   >
-                                      {column.tasks.map((task) => (
-                                          <div
-                                              key={task.id}
-                                              draggable
-                                              onDragStart={(e) =>
-                                                  handleDragStart(
-                                                      e,
-                                                      task,
-                                                      column.id
-                                                  )
-                                              }
-                                              onDragEnd={handleDragEnd}
-                                              onClick={() =>
-                                                  editTask(task, column.id)
-                                              }
-                                              className='bg-zinc-800 rounded-lg p-3 cursor-move hover:bg-zinc-800/60 transition-all duration-200 group select-none'
-                                          >
-                                              <div className='flex justify-between items-start mb-2'>
-                                                  <h4 className='text-sm font-medium text-white leading-tight flex-1'>
-                                                      {task.title}
-                                                  </h4>
-                                                  <AlertDialog>
-                                                      <AlertDialogTrigger
-                                                          asChild
-                                                      >
-                                                          <button
-                                                              onClick={(e) => {
-                                                                  e.stopPropagation();
-                                                                  openDeleteDialog(
-                                                                      column.id,
-                                                                      task.id
-                                                                  );
-                                                              }}
-                                                              className='text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity ml-2'
+                                      {column.tasks.map((task) => {
+                                          const event = events.find((e) => e.id === task.id);
+                                          return (
+                                              <div
+                                                  key={task.id}
+                                                  draggable
+                                                  onDragStart={(e) =>
+                                                      handleDragStart(
+                                                          e,
+                                                          task,
+                                                          column.id
+                                                      )
+                                                  }
+                                                  onDragEnd={handleDragEnd}
+                                                  onClick={() =>
+                                                      editTask(task, column.id)
+                                                  }
+                                                  className='bg-zinc-800 rounded-lg p-3 cursor-move hover:bg-zinc-800/60 transition-all duration-200 group select-none'
+                                                  style={{ borderLeft: event ? `4px solid ${event.color}` : "none" }}
+                                              >
+                                                  <div className='flex justify-between items-start mb-2'>
+                                                      <h4 className='text-sm font-medium text-white leading-tight flex-1'>
+                                                          {task.title}
+                                                      </h4>
+                                                      <AlertDialog>
+                                                          <AlertDialogTrigger
+                                                              asChild
                                                           >
-                                                              ×
-                                                          </button>
-                                                      </AlertDialogTrigger>
-                                                      <AlertDialogContent className='bg-zinc-900 border-zinc-800 text-white'>
-                                                          <AlertDialogHeader>
-                                                              <AlertDialogTitle>
-                                                                  Are you sure?
-                                                              </AlertDialogTitle>
-                                                              <AlertDialogDescription className='text-zinc-400'>
-                                                                  This action
-                                                                  cannot be
-                                                                  undone. This
-                                                                  will
-                                                                  permanently
-                                                                  delete the
-                                                                  task &quot;
-                                                                  {task.title}
-                                                                  &quot;.
-                                                              </AlertDialogDescription>
-                                                          </AlertDialogHeader>
-                                                          <AlertDialogFooter>
-                                                              <AlertDialogCancel className='bg-zinc-800 text-white border-zinc-800 hover:bg-zinc-900'>
-                                                                  Cancel
-                                                              </AlertDialogCancel>
-                                                              <AlertDialogAction
-                                                                  onClick={() =>
-                                                                      taskToDelete &&
-                                                                      deleteTask(
-                                                                          taskToDelete.columnId,
-                                                                          taskToDelete.taskId
-                                                                      )
-                                                                  }
-                                                                  className='bg-red-600 text-white hover:bg-red-700'
+                                                              <button
+                                                                  onClick={(e) => {
+                                                                      e.stopPropagation();
+                                                                      openDeleteDialog(
+                                                                          column.id,
+                                                                          task.id
+                                                                      );
+                                                                  }}
+                                                                  className='text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity ml-2'
                                                               >
-                                                                  Delete
-                                                              </AlertDialogAction>
-                                                          </AlertDialogFooter>
-                                                      </AlertDialogContent>
-                                                  </AlertDialog>
+                                                                  ×
+                                                              </button>
+                                                          </AlertDialogTrigger>
+                                                          <AlertDialogContent className='bg-zinc-900 border-zinc-800 text-white'>
+                                                              <AlertDialogHeader>
+                                                                  <AlertDialogTitle>
+                                                                      Are you sure?
+                                                                  </AlertDialogTitle>
+                                                                  <AlertDialogDescription className='text-zinc-400'>
+                                                                      This action
+                                                                      cannot be
+                                                                      undone. This
+                                                                      will
+                                                                      permanently
+                                                                      delete the
+                                                                      task "
+                                                                      {task.title}
+                                                                      ".
+                                                                  </AlertDialogDescription>
+                                                              </AlertDialogHeader>
+                                                              <AlertDialogFooter>
+                                                                  <AlertDialogCancel className='bg-zinc-800 text-white border-zinc-800 hover:bg-zinc-900'>
+                                                                      Cancel
+                                                                  </AlertDialogCancel>
+                                                                  <AlertDialogAction
+                                                                      onClick={() =>
+                                                                          taskToDelete &&
+                                                                          deleteTask(
+                                                                              taskToDelete.columnId,
+                                                                              taskToDelete.taskId
+                                                                          )
+                                                                      }
+                                                                      className='bg-red-600 text-white hover:bg-red-700'
+                                                                  >
+                                                                      Delete
+                                                                  </AlertDialogAction>
+                                                              </AlertDialogFooter>
+                                                          </AlertDialogContent>
+                                                      </AlertDialog>
+                                                  </div>
+                                                  {event && (
+                                                      <div className='text-xs text-zinc-400 mb-1'>
+                                                          🕒 {event.time}
+                                                      </div>
+                                                  )}
+                                                  {task.platform && (
+                                                      <div className='flex items-center space-x-2'>
+                                                          <span className='text-xs'>
+                                                              {getPlatformIcon(
+                                                                  task.platform
+                                                              )}
+                                                          </span>
+                                                          <span className='text-xs text-zinc-400'>
+                                                              {task.platform}
+                                                          </span>
+                                                      </div>
+                                                  )}
+                                                  {task.status && (
+                                                      <div className='flex items-center space-x-2 mt-1'>
+                                                          <span className='text-xs'>
+                                                              {getPlatformIcon(
+                                                                  task.status
+                                                              )}
+                                                          </span>
+                                                          <span className='text-xs text-zinc-400'>
+                                                              {task.status}
+                                                          </span>
+                                                      </div>
+                                                  )}
                                               </div>
-                                              {task.platform && (
-                                                  <div className='flex items-center space-x-2'>
-                                                      <span className='text-xs'>
-                                                          {getPlatformIcon(
-                                                              task.platform
-                                                          )}
-                                                      </span>
-                                                      <span className='text-xs text-zinc-400'>
-                                                          {task.platform}
-                                                      </span>
-                                                  </div>
-                                              )}
-                                              {task.status && (
-                                                  <div className='flex items-center space-x-2 mt-1'>
-                                                      <span className='text-xs'>
-                                                          {getPlatformIcon(
-                                                              task.status
-                                                          )}
-                                                      </span>
-                                                      <span className='text-xs text-zinc-400'>
-                                                          {task.status}
-                                                      </span>
-                                                  </div>
-                                              )}
-                                          </div>
-                                      ))}
+                                          );
+                                      })}
                                   </div>
                               </div>
                           ))}
@@ -911,16 +1014,63 @@ const KanbanBoard: React.FC = () => {
                                       <Input
                                           id='date'
                                           type='date'
-                                          value={newEvent.date}
+                                          value={selectedDate}
+                                          onChange={(
+                                              e: React.ChangeEvent<HTMLInputElement>
+                                          ) => {
+                                              setSelectedDate(e.target.value);
+                                              setNewEvent({
+                                                  ...newEvent,
+                                                  date: e.target.value,
+                                              });
+                                          }}
+                                          className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                      />
+                                  </div>
+                                  <div className='space-y-2'>
+                                      <Label
+                                          htmlFor='time'
+                                          className='text-sm text-zinc-400'
+                                      >
+                                          Time
+                                      </Label>
+                                      <Input
+                                          id='time'
+                                          type='time'
+                                          value={newEvent.time}
                                           onChange={(
                                               e: React.ChangeEvent<HTMLInputElement>
                                           ) =>
                                               setNewEvent({
                                                   ...newEvent,
-                                                  date: e.target.value,
+                                                  time: e.target.value,
                                               })
                                           }
                                           className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                      />
+                                  </div>
+                              </div>
+                              <div className='grid grid-cols-2 gap-4'>
+                                  <div className='space-y-2'>
+                                      <Label
+                                          htmlFor='color'
+                                          className='text-sm text-zinc-400'
+                                      >
+                                          Color
+                                      </Label>
+                                      <Input
+                                          id='color'
+                                          type='color'
+                                          value={newEvent.color}
+                                          onChange={(
+                                              e: React.ChangeEvent<HTMLInputElement>
+                                          ) =>
+                                              setNewEvent({
+                                                  ...newEvent,
+                                                  color: e.target.value,
+                                              })
+                                          }
+                                          className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 h-10'
                                       />
                                   </div>
                                   <div className='space-y-2'>

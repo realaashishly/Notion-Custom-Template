@@ -6,12 +6,13 @@ export enum Platform {
 }
 
 // Interfaces
-export interface Task {
+export type Task = {
     id: string;
     title: string;
     platform?: string;
     status?: string;
-}
+    date?: string;
+};
 
 export interface Column {
     id: string;

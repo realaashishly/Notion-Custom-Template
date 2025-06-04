@@ -25,7 +25,6 @@ function calculateDaysLeft(
     endDate: string,
     status: TaskStatus
 ) {
-    const start = new Date(startDate);
     const end = new Date(endDate);
     const today = new Date();
 
@@ -149,7 +148,12 @@ function getFilteredTasks(tab: string, tasks: Task[]): Task[] {
 }
 
 // Function to cycle through statuses
-const statusOrder: TaskStatus[] = ["not-started", "in-progress", "done", "cancelled"];
+const statusOrder: TaskStatus[] = [
+    "not-started",
+    "in-progress",
+    "done",
+    "cancelled",
+];
 function getNextStatus(currentStatus: TaskStatus): TaskStatus {
     const currentIndex = statusOrder.indexOf(currentStatus);
     const nextIndex = (currentIndex + 1) % statusOrder.length;
@@ -362,8 +366,8 @@ const DeleteModal = ({
 
                 <div className='mb-6'>
                     <p className='text-zinc-300'>
-                        Are you sure you want to delete "{taskName}"? This
-                        action cannot be undone.
+                        Are you sure you want to delete &quot;{taskName}&quot;?
+                        This action cannot be undone.
                     </p>
                 </div>
 

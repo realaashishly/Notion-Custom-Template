@@ -52,7 +52,7 @@ const initialEvents: CalendarEvent[] = [
   },
 ];
 
-const KanbanBoard: React.FC = () => {
+const ManagementKanbanBoard: React.FC = () => {
     const [newEvent, setNewEvent] = useState({
         title: "",
         description: "",
@@ -73,19 +73,20 @@ const KanbanBoard: React.FC = () => {
         return initialEvents;
     });
 
+    // Set selectedDate to current date (formatted as YYYY-MM-DD)
     const [selectedDate, setSelectedDate] = useState<string>(() => {
         if (typeof window !== "undefined") {
-            return localStorage.getItem("selectedDate") || "2025-05-27";
+            const savedDate = localStorage.getItem("selectedDate");
+            if (savedDate) return savedDate;
         }
-        return "2025-05-27";
+        const today = new Date();
+        return today.toISOString().split("T")[0]; // Format as YYYY-MM-DD
     });
 
     const [selected, setSelected] = useState<string[]>([]);
     const [showEventModal, setShowEventModal] = useState(false);
     const [targetColumnId, setTargetColumnId] = useState<string>("");
-    const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(
-        null
-    );
+    const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     const [editingTask, setEditingTask] = useState<{
         task: Task;
         columnId: string;
@@ -125,15 +126,11 @@ const KanbanBoard: React.FC = () => {
         Giveaway: [],
         Sponsorships: [],
     });
-    const [showNewColumnModal, setShowNewColumnModal] =
-        useState<boolean>(false);
+    const [showNewColumnModal, setShowNewColumnModal] = useState<boolean>(false);
     const [newColumnName, setNewColumnName] = useState<string>("");
-    const [showNewOperationColumnModal, setShowNewOperationColumnModal] =
-        useState<boolean>(false);
-    const [newOperationColumnName, setNewOperationColumnName] =
-        useState<string>("");
-    const [newOperationColumnColor, setNewOperationColumnColor] =
-        useState<string>("#3b82f6");
+    const [showNewOperationColumnModal, setShowNewOperationColumnModal] = useState<boolean>(false);
+    const [newOperationColumnName, setNewOperationColumnName] = useState<string>("");
+    const [newOperationColumnColor, setNewOperationColumnColor] = useState<string>("#3b82f6");
     const [taskToDelete, setTaskToDelete] = useState<{
         columnId: string;
         taskId: string;
@@ -520,10 +517,6 @@ const KanbanBoard: React.FC = () => {
         return allTasks.sort((a, b) => a.title.localeCompare(b.title));
     };
 
-    // const toggle = (name: string) => {
-    //   setSelected((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
-    // };
-
     const closeModal = () => {
         setShowEventModal(false);
         setEditingEvent(null);
@@ -561,48 +554,48 @@ const KanbanBoard: React.FC = () => {
     };
 
     return (
-        <div className='min-h-screen bg-zinc-950 text-white'>
+        <div className='bg-zinc-950 text-white min-h-screen'>
             <div className='max-w-7xl mx-auto'>
-                <div className='p-4'>
-                    <h1 className='text-2xl sm:text-3xl font-light tracking-wider mb-4'>
+                <div className='p-4 sm:p-6'>
+                    <h1 className='text-xl sm:text-2xl md:text-3xl font-light tracking-[0.3em] mb-4 text-zinc-300'>
                         MANAGEMENT
                     </h1>
                     <div className='h-px bg-zinc-700 mb-4' />
                     <div className='mt-4 flex items-center space-x-2'>
-                        <span className='text-lg'>#</span>
-                        <span className='text-lg font-medium'>
+                        <span className='text-lg sm:text-xl text-zinc-400'>#</span>
+                        <span className='text-lg sm:text-xl font-medium'>
                             The Architect
                         </span>
                     </div>
                 </div>
 
-                <div className='p-6 border-zinc-900'>
+                <div className='p-4 sm:p-6 border-zinc-900'>
                     <div className='flex items-center justify-between mb-4'>
                         <div className='flex items-center space-x-2'>
-                            <span className='text-zinc-400'>📝</span>
-                            <span className='font-medium'>Capture Space</span>
+                            <span className='text-lg sm:text-xl text-zinc-400'>📝</span>
+                            <span className='font-medium text-sm sm:text-base'>Capture Space</span>
                         </div>
                         <Button
                             onClick={() => setShowNewColumnModal(true)}
-                            className='bg-transparent hover:bg-transparent hover:underline text-white text-sm px-3 py-1'
+                            className='bg-zinc-800 hover:bg-zinc-700 text-white text-xs sm:text-sm px-3 py-1'
                         >
                             + New Column
                         </Button>
                     </div>
-                    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-start'>
+                    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4 items-start overflow-auto'>
                         {Object.keys(captures).map((category) => (
                             <div
                                 key={category}
-                                className='bg-zinc-900 rounded-lg'
+                                className='bg-zinc-900 rounded-lg min-h-[6rem] sm:min-h-[8rem]'
                             >
-                                <div className='px-3 py-2 rounded-t-lg text-sm font-medium bg-zinc-900'>
+                                <div className='px-3 py-2 rounded-t-lg text-xs sm:text-sm font-medium bg-zinc-900'>
                                     {category}
                                 </div>
                                 <div className='space-y-1 p-2'>
                                     {captures[category].map((capture) => (
                                         <div
                                             key={capture.id}
-                                            className='bg-zinc-800 rounded px-3 py-2 text-sm text-white cursor-pointer hover:bg-zinc-700'
+                                            className='bg-zinc-800 rounded px-3 py-2 text-xs sm:text-sm text-white cursor-pointer hover:bg-zinc-700'
                                             onClick={() =>
                                                 editCapture(category, capture)
                                             }
@@ -611,7 +604,7 @@ const KanbanBoard: React.FC = () => {
                                         </div>
                                     ))}
                                     <div
-                                        className='bg-zinc-800 rounded px-3 py-2 text-sm cursor-pointer hover:bg-zinc-800/60'
+                                        className='bg-zinc-800 rounded px-3 py-2 text-xs sm:text-sm cursor-pointer hover:bg-zinc-800/60'
                                         onClick={() =>
                                             openCaptureModal(category)
                                         }
@@ -624,13 +617,13 @@ const KanbanBoard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className='p-6'>
+                <div className='p-4 sm:p-6'>
                     <div className='flex items-center justify-between mb-4'>
-                        <div className='flex items-center space-x-2'>
-                            <span className='text-zinc-400'>⚡</span>
+                        <div className='flex items-center space-x-2 sm:space-x-4 flex-wrap gap-2'>
+                            <span className='text-lg sm:text-xl text-zinc-400'>⚡</span>
                             <button
                                 onClick={() => setShowListView(false)}
-                                className={`font-medium transition-colors ${
+                                className={`font-medium text-xs sm:text-sm transition-colors ${
                                     !showListView
                                         ? "text-white underline underline-offset-4"
                                         : "text-zinc-500 hover:text-zinc-300"
@@ -638,10 +631,10 @@ const KanbanBoard: React.FC = () => {
                             >
                                 Operation Space
                             </button>
-                            <span className='text-zinc-400'>📋</span>
+                            <span className='text-lg sm:text-xl text-zinc-400'>📋</span>
                             <button
                                 onClick={() => setShowListView(true)}
-                                className={`font-medium transition-colors ${
+                                className={`font-medium text-xs sm:text-sm transition-colors ${
                                     showListView
                                         ? "text-white underline underline-offset-4"
                                         : "text-zinc-500 hover:text-zinc-300"
@@ -655,7 +648,7 @@ const KanbanBoard: React.FC = () => {
                                 onClick={() =>
                                     setShowNewOperationColumnModal(true)
                                 }
-                                className='bg-transparent hover:bg-transparent hover:underline text-white text-sm px-3 py-1'
+                                className='bg-zinc-800 hover:bg-zinc-700 text-white text-xs sm:text-sm px-3 py-1'
                             >
                                 + New Column
                             </Button>
@@ -666,28 +659,28 @@ const KanbanBoard: React.FC = () => {
                     {showListView ? (
                         <div className='rounded-lg overflow-hidden'>
                             <div className='overflow-x-auto'>
-                                <table className='w-full text-sm'>
+                                <table className='w-full text-xs sm:text-sm min-w-[600px]'>
                                     <thead>
-                                        <tr>
-                                            <th className='text-left p-3 font-medium text-zinc-300'>
+                                        <tr className='bg-zinc-800'>
+                                            <th className='text-left p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Task
                                             </th>
-                                            <th className='text-left p-3 font-medium text-zinc-300'>
+                                            <th className='text-left p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Author
                                             </th>
-                                            <th className='text-center p-3 font-medium text-zinc-300'>
+                                            <th className='text-center p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Platform 1
                                             </th>
-                                            <th className='text-center p-3 font-medium text-zinc-300'>
+                                            <th className='text-center p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Platform 2
                                             </th>
-                                            <th className='text-left p-3 font-medium text-zinc-300'>
+                                            <th className='text-left p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Date
                                             </th>
-                                            <th className='text-left p-3 font-medium text-zinc-300'>
+                                            <th className='text-left p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Time
                                             </th>
-                                            <th className='text-center p-3 font-medium text-zinc-300'>
+                                            <th className='text-center p-2 sm:p-3 font-medium text-zinc-300'>
                                                 Status
                                             </th>
                                         </tr>
@@ -698,9 +691,9 @@ const KanbanBoard: React.FC = () => {
                                                 key={task.id}
                                                 className='border-b border-zinc-700 hover:bg-zinc-700 transition-colors'
                                             >
-                                                <td className='p-3'>
+                                                <td className='p-2 sm:p-3'>
                                                     <div className='flex items-center space-x-2'>
-                                                        <span className='text-zinc-400'>
+                                                        <span className='text-zinc-400 text-lg sm:text-xl'>
                                                             📄
                                                         </span>
                                                         <span className='text-white'>
@@ -708,9 +701,9 @@ const KanbanBoard: React.FC = () => {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className='p-3'>
+                                                <td className='p-2 sm:p-3'>
                                                     <div className='flex items-center space-x-2'>
-                                                        <span className='text-zinc-400'>
+                                                        <span className='text-zinc-400 text-lg sm:text-xl'>
                                                             👤
                                                         </span>
                                                         <span className='text-zinc-300'>
@@ -718,10 +711,10 @@ const KanbanBoard: React.FC = () => {
                                                         </span>
                                                     </div>
                                                 </td>
-                                                <td className='p-3 text-center'>
+                                                <td className='p-2 sm:p-3 text-center'>
                                                     {task.platform && (
                                                         <div className='flex items-center justify-center space-x-1'>
-                                                            <span>
+                                                            <span className='text-lg sm:text-xl'>
                                                                 {getPlatformIcon(
                                                                     task.platform
                                                                 )}
@@ -732,12 +725,12 @@ const KanbanBoard: React.FC = () => {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className='p-3 text-center'>
+                                                <td className='p-2 sm:p-3 text-center'>
                                                     {task.status &&
                                                         task.status !==
                                                             task.platform && (
                                                             <div className='flex items-center justify-center space-x-1'>
-                                                                <span>
+                                                                <span className='text-lg sm:text-xl'>
                                                                     {getPlatformIcon(
                                                                         task.status
                                                                     )}
@@ -750,15 +743,15 @@ const KanbanBoard: React.FC = () => {
                                                             </div>
                                                         )}
                                                 </td>
-                                                <td className='p-3 text-zinc-300'>
+                                                <td className='p-2 sm:p-3 text-zinc-300'>
                                                     {task.date}
                                                 </td>
-                                                <td className='p-3 text-zinc-300'>
+                                                <td className='p-2 sm:p-3 text-zinc-300'>
                                                     {task.time || "N/A"}
                                                 </td>
-                                                <td className='p-3 text-center'>
+                                                <td className='p-2 sm:p-3 text-center'>
                                                     <span
-                                                        className={`px-2 py-1 rounded text-xs font-medium ${
+                                                        className={`px-2 py-1 rounded text-xs sm:text-sm font-medium ${
                                                             task.status ===
                                                             "Published"
                                                                 ? "bg-green-600 text-green-100"
@@ -783,7 +776,7 @@ const KanbanBoard: React.FC = () => {
                                             </tr>
                                         ))}
                                         <tr className='border-t border-zinc-700'>
-                                            <td className='p-3' colSpan={7}>
+                                            <td className='p-2 sm:p-3' colSpan={7}>
                                                 <div
                                                     className='flex items-center space-x-2 cursor-pointer hover:bg-zinc-800 rounded px-3 py-2'
                                                     onClick={() =>
@@ -791,10 +784,10 @@ const KanbanBoard: React.FC = () => {
                                                         addTask(columns[0].id)
                                                     }
                                                 >
-                                                    <span className='text-zinc-400'>
+                                                    <span className='text-zinc-400 text-lg sm:text-xl'>
                                                         ➕
                                                     </span>
-                                                    <span className='text-zinc-300'>
+                                                    <span className='text-zinc-300 text-xs sm:text-sm'>
                                                         Add New Task
                                                     </span>
                                                 </div>
@@ -805,7 +798,7 @@ const KanbanBoard: React.FC = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 items-start'>
+                        <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4 items-start overflow-auto'>
                             {columns.map((column) => (
                                 <div
                                     key={column.id}
@@ -813,7 +806,7 @@ const KanbanBoard: React.FC = () => {
                                         dragOverColumn === column.id
                                             ? "ring-2 ring-sky-700 bg-opacity-20"
                                             : ""
-                                    }`}
+                                    } min-h-[6rem] sm:min-h-[8rem]`}
                                     onDragOver={handleDragOver}
                                     onDragEnter={(e) =>
                                         handleDragEnter(e, column.id)
@@ -822,7 +815,7 @@ const KanbanBoard: React.FC = () => {
                                     onDrop={(e) => handleDrop(e, column.id)}
                                 >
                                     <div
-                                        className='rounded-t-lg px-3 py-2 text-sm font-medium flex items-center justify-between'
+                                        className='rounded-t-lg px-3 py-2 text-xs sm:text-sm font-medium flex items-center justify-between'
                                         style={{
                                             backgroundColor: column.color,
                                         }}
@@ -830,13 +823,13 @@ const KanbanBoard: React.FC = () => {
                                         <span>{column.title}</span>
                                         <button
                                             onClick={() => addTask(column.id)}
-                                            className='text-white hover:bg-black hover:bg-opacity-20 rounded px-1'
+                                            className='text-white hover:bg-black hover:bg-opacity-20 rounded px-1 text-xs sm:text-sm'
                                         >
                                             +
                                         </button>
                                     </div>
                                     <div
-                                        className='bg-zinc-900 rounded-b-lg p-2 space-y-2'
+                                        className='bg-zinc-900 rounded-b-lg p-2 sm:p-3 space-y-2 sm:space-y-3 overflow-auto'
                                         onDragOver={handleDragOver}
                                         onDragEnter={(e) =>
                                             handleDragEnter(e, column.id)
@@ -866,7 +859,7 @@ const KanbanBoard: React.FC = () => {
                                                             column.id
                                                         )
                                                     }
-                                                    className='bg-zinc-800 rounded-lg p-3 cursor-move hover:bg-zinc-800/60 transition-all duration-200 group select-none'
+                                                    className='bg-zinc-800 rounded-lg p-2 sm:p-3 cursor-move hover:bg-zinc-800/60 transition-colors group select-none min-h-[6rem]'
                                                     style={{
                                                         borderLeft: event
                                                             ? `4px solid ${event.color}`
@@ -874,7 +867,7 @@ const KanbanBoard: React.FC = () => {
                                                     }}
                                                 >
                                                     <div className='flex justify-between items-start mb-2'>
-                                                        <h4 className='text-sm font-medium text-white leading-tight flex-1'>
+                                                        <h4 className='text-xs sm:text-sm font-medium text-white leading-tight flex-1'>
                                                             {task.title}
                                                         </h4>
                                                         <AlertDialog>
@@ -891,37 +884,22 @@ const KanbanBoard: React.FC = () => {
                                                                             task.id
                                                                         );
                                                                     }}
-                                                                    className='text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity ml-2'
+                                                                    className='text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity ml-2 text-xs sm:text-sm'
                                                                 >
                                                                     ×
                                                                 </button>
                                                             </AlertDialogTrigger>
-                                                            <AlertDialogContent className='bg-zinc-900 border-zinc-800 text-white'>
+                                                            <AlertDialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-md p-4 sm:p-6'>
                                                                 <AlertDialogHeader>
-                                                                    <AlertDialogTitle>
-                                                                        Are you
-                                                                        sure?
+                                                                    <AlertDialogTitle className='text-base sm:text-lg font-medium'>
+                                                                        Are you sure?
                                                                     </AlertDialogTitle>
-                                                                    <AlertDialogDescription className='text-zinc-400'>
-                                                                        This
-                                                                        action
-                                                                        cannot
-                                                                        be
-                                                                        undone.
-                                                                        This
-                                                                        will
-                                                                        permanently
-                                                                        delete
-                                                                        the task
-                                                                        &quot;
-                                                                        {
-                                                                            task.title
-                                                                        }
-                                                                        &quot;.
+                                                                    <AlertDialogDescription className='text-zinc-400 text-xs sm:text-sm'>
+                                                                        This action cannot be undone. This will permanently delete the task "{task.title}".
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
-                                                                <AlertDialogFooter>
-                                                                    <AlertDialogCancel className='bg-zinc-800 text-white border-zinc-800 hover:bg-zinc-900'>
+                                                                <AlertDialogFooter className='flex flex-col sm:flex-row gap-2 sm:gap-4'>
+                                                                    <AlertDialogCancel className='bg-zinc-800 text-white border-zinc-700 hover:bg-zinc-700 text-xs sm:text-sm py-2'>
                                                                         Cancel
                                                                     </AlertDialogCancel>
                                                                     <AlertDialogAction
@@ -932,7 +910,7 @@ const KanbanBoard: React.FC = () => {
                                                                                 taskToDelete.taskId
                                                                             )
                                                                         }
-                                                                        className='bg-red-600 text-white hover:bg-red-700'
+                                                                        className='bg-red-600 text-white hover:bg-red-700 text-xs sm:text-sm py-2'
                                                                     >
                                                                         Delete
                                                                     </AlertDialogAction>
@@ -941,30 +919,31 @@ const KanbanBoard: React.FC = () => {
                                                         </AlertDialog>
                                                     </div>
                                                     {event && (
-                                                        <div className='text-xs text-zinc-400 mb-1'>
-                                                            🕒 {event.time}
+                                                        <div className='text-xs sm:text-sm text-zinc-400 mb-1 flex items-center space-x-1'>
+                                                            <span className='text-lg sm:text-xl'>🕒</span>
+                                                            <span>{event.time}</span>
                                                         </div>
                                                     )}
                                                     {task.platform && (
                                                         <div className='flex items-center space-x-2'>
-                                                            <span className='text-xs'>
+                                                            <span className='text-lg sm:text-xl'>
                                                                 {getPlatformIcon(
                                                                     task.platform
                                                                 )}
                                                             </span>
-                                                            <span className='text-xs text-zinc-400'>
+                                                            <span className='text-xs sm:text-sm text-zinc-400'>
                                                                 {task.platform}
                                                             </span>
                                                         </div>
                                                     )}
                                                     {task.status && (
                                                         <div className='flex items-center space-x-2 mt-1'>
-                                                            <span className='text-xs'>
+                                                            <span className='text-lg sm:text-xl'>
                                                                 {getPlatformIcon(
                                                                     task.status
                                                                 )}
                                                             </span>
-                                                            <span className='text-xs text-zinc-400'>
+                                                            <span className='text-xs sm:text-sm text-zinc-400'>
                                                                 {task.status}
                                                             </span>
                                                         </div>
@@ -979,14 +958,14 @@ const KanbanBoard: React.FC = () => {
                     )}
 
                     <Dialog open={showEventModal} onOpenChange={closeModal}>
-                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-md'>
+                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-md p-4 sm:p-6'>
                             <DialogHeader>
-                                <DialogTitle className='text-lg font-medium'>
+                                <DialogTitle className='text-base sm:text-lg font-medium'>
                                     {editingEvent || editingTask
                                         ? "Edit Task"
                                         : "Add New Task"}
                                 </DialogTitle>
-                                <DialogDescription className='text-zinc-400'>
+                                <DialogDescription className='text-zinc-400 text-xs sm:text-sm'>
                                     {editingEvent || editingTask
                                         ? "Update your task details"
                                         : "Create a new task for your board"}
@@ -996,7 +975,7 @@ const KanbanBoard: React.FC = () => {
                                 <div className='space-y-2'>
                                     <Label
                                         htmlFor='title'
-                                        className='text-sm text-zinc-400'
+                                        className='text-xs sm:text-sm text-zinc-400'
                                     >
                                         Title
                                     </Label>
@@ -1012,15 +991,15 @@ const KanbanBoard: React.FC = () => {
                                                 title: e.target.value,
                                             })
                                         }
-                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm'
                                         placeholder='Task title'
                                     />
                                 </div>
-                                <div className='grid grid-cols-2 gap-4'>
+                                <div className='grid grid-cols-2 gap-2 sm:gap-4'>
                                     <div className='space-y-2'>
                                         <Label
                                             htmlFor='platform1'
-                                            className='text-sm text-zinc-400'
+                                            className='text-xs sm:text-sm text-zinc-400'
                                         >
                                             Platform 1
                                         </Label>
@@ -1035,7 +1014,7 @@ const KanbanBoard: React.FC = () => {
                                                     platform1: e.target.value,
                                                 })
                                             }
-                                            className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 rounded px-3 py-2 text-sm'
+                                            className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 rounded px-3 py-2 text-xs sm:text-sm'
                                         >
                                             <option value=''>
                                                 Select Platform
@@ -1053,7 +1032,7 @@ const KanbanBoard: React.FC = () => {
                                     <div className='space-y-2'>
                                         <Label
                                             htmlFor='platform2'
-                                            className='text-sm text-zinc-400'
+                                            className='text-xs sm:text-sm text-zinc-400'
                                         >
                                             Platform 2
                                         </Label>
@@ -1068,7 +1047,7 @@ const KanbanBoard: React.FC = () => {
                                                     platform2: e.target.value,
                                                 })
                                             }
-                                            className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 rounded px-3 py-2 text-sm'
+                                            className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 rounded px-3 py-2 text-xs sm:text-sm'
                                         >
                                             <option value=''>
                                                 Select Platform
@@ -1084,11 +1063,11 @@ const KanbanBoard: React.FC = () => {
                                         </select>
                                     </div>
                                 </div>
-                                <div className='grid grid-cols-2 gap-4'>
+                                <div className='grid grid-cols-2 gap-2 sm:gap-4'>
                                     <div className='space-y-2'>
                                         <Label
                                             htmlFor='date'
-                                            className='text-sm text-zinc-400'
+                                            className='text-xs sm:text-sm text-zinc-400'
                                         >
                                             Date
                                         </Label>
@@ -1105,13 +1084,13 @@ const KanbanBoard: React.FC = () => {
                                                     date: e.target.value,
                                                 });
                                             }}
-                                            className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                            className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm'
                                         />
                                     </div>
                                     <div className='space-y-2'>
                                         <Label
                                             htmlFor='time'
-                                            className='text-sm text-zinc-400'
+                                            className='text-xs sm:text-sm text-zinc-400'
                                         >
                                             Time
                                         </Label>
@@ -1127,15 +1106,15 @@ const KanbanBoard: React.FC = () => {
                                                     time: e.target.value,
                                                 })
                                             }
-                                            className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                            className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm'
                                         />
                                     </div>
                                 </div>
-                                <div className='grid grid-cols-2 gap-4'>
+                                <div className='grid grid-cols-2 gap-2 sm:gap-4'>
                                     <div className='space-y-2'>
                                         <Label
                                             htmlFor='color'
-                                            className='text-sm text-zinc-400'
+                                            className='text-xs sm:text-sm text-zinc-400'
                                         >
                                             Color
                                         </Label>
@@ -1157,7 +1136,7 @@ const KanbanBoard: React.FC = () => {
                                     <div className='space-y-2'>
                                         <Label
                                             htmlFor='status'
-                                            className='text-sm text-zinc-400'
+                                            className='text-xs sm:text-sm text-zinc-400'
                                         >
                                             Status
                                         </Label>
@@ -1172,7 +1151,7 @@ const KanbanBoard: React.FC = () => {
                                                     status: e.target.value,
                                                 })
                                             }
-                                            className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 rounded px-3 py-2 text-sm'
+                                            className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 rounded px-3 py-2 text-xs sm:text-sm'
                                         >
                                             <option value=''>
                                                 Select Status
@@ -1196,14 +1175,14 @@ const KanbanBoard: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className='flex gap-2 mt-6'>
+                            <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 mt-6'>
                                 <Button
                                     onClick={
                                         editingEvent || editingTask
                                             ? handleUpdateEvent
                                             : handleAddEvent
                                     }
-                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white'
+                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2'
                                 >
                                     {editingEvent || editingTask
                                         ? "Update Task"
@@ -1211,7 +1190,7 @@ const KanbanBoard: React.FC = () => {
                                 </Button>
                                 <Button
                                     onClick={closeModal}
-                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white'
+                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm py-2'
                                 >
                                     Cancel
                                 </Button>
@@ -1223,14 +1202,14 @@ const KanbanBoard: React.FC = () => {
                         open={showCaptureModal}
                         onOpenChange={closeCaptureModal}
                     >
-                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-md'>
+                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-md p-4 sm:p-6'>
                             <DialogHeader>
-                                <DialogTitle className='text-lg font-medium'>
+                                <DialogTitle className='text-base sm:text-lg font-medium'>
                                     {editingCapture
                                         ? `Edit ${captureCategory} Capture`
                                         : `Add New ${captureCategory} Capture`}
                                 </DialogTitle>
-                                <DialogDescription className='text-zinc-400'>
+                                <DialogDescription className='text-zinc-400 text-xs sm:text-sm'>
                                     {editingCapture
                                         ? `Update your goal or idea for ${captureCategory}`
                                         : `Enter your goal or idea for ${captureCategory}`}
@@ -1240,7 +1219,7 @@ const KanbanBoard: React.FC = () => {
                                 <div className='space-y-2'>
                                     <Label
                                         htmlFor='capture'
-                                        className='text-sm text-zinc-400'
+                                        className='text-xs sm:text-sm text-zinc-400'
                                     >
                                         {captureCategory} Goal
                                     </Label>
@@ -1251,15 +1230,15 @@ const KanbanBoard: React.FC = () => {
                                         onChange={(
                                             e: React.ChangeEvent<HTMLInputElement>
                                         ) => setNewCapture(e.target.value)}
-                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm'
                                         placeholder={`Enter ${captureCategory.toLowerCase()} goal`}
                                     />
                                 </div>
                             </div>
-                            <div className='flex gap-2 mt-6'>
+                            <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 mt-6'>
                                 <Button
                                     onClick={handleAddCapture}
-                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white'
+                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2'
                                 >
                                     {editingCapture
                                         ? "Update Capture"
@@ -1267,7 +1246,7 @@ const KanbanBoard: React.FC = () => {
                                 </Button>
                                 <Button
                                     onClick={closeCaptureModal}
-                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white'
+                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm py-2'
                                 >
                                     Cancel
                                 </Button>
@@ -1279,21 +1258,20 @@ const KanbanBoard: React.FC = () => {
                         open={showNewColumnModal}
                         onOpenChange={closeNewColumnModal}
                     >
-                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-md'>
+                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-md p-4 sm:p-6'>
                             <DialogHeader>
-                                <DialogTitle className='text-lg font-medium'>
+                                <DialogTitle className='text-base sm:text-lg font-medium'>
                                     Add New Column
                                 </DialogTitle>
-                                <DialogDescription className='text-zinc-400'>
-                                    Enter the name for the new Capture Space
-                                    column
+                                <DialogDescription className='text-zinc-400 text-xs sm:text-sm'>
+                                    Enter the name for the new Capture Space column
                                 </DialogDescription>
                             </DialogHeader>
                             <div className='space-y-4'>
                                 <div className='space-y-2'>
                                     <Label
                                         htmlFor='columnName'
-                                        className='text-sm text-zinc-400'
+                                        className='text-xs sm:text-sm text-zinc-400'
                                     >
                                         Column Name
                                     </Label>
@@ -1304,21 +1282,21 @@ const KanbanBoard: React.FC = () => {
                                         onChange={(
                                             e: React.ChangeEvent<HTMLInputElement>
                                         ) => setNewColumnName(e.target.value)}
-                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm'
                                         placeholder='Enter column name'
                                     />
                                 </div>
                             </div>
-                            <div className='flex gap-2 mt-6'>
+                            <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 mt-6'>
                                 <Button
                                     onClick={handleAddColumn}
-                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white'
+                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2'
                                 >
                                     Add Column
                                 </Button>
                                 <Button
                                     onClick={closeNewColumnModal}
-                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white'
+                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm py-2'
                                 >
                                     Cancel
                                 </Button>
@@ -1330,21 +1308,20 @@ const KanbanBoard: React.FC = () => {
                         open={showNewOperationColumnModal}
                         onOpenChange={closeNewOperationColumnModal}
                     >
-                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-md'>
+                        <DialogContent className='bg-zinc-900 border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-md p-4 sm:p-6'>
                             <DialogHeader>
-                                <DialogTitle className='text-lg font-medium'>
+                                <DialogTitle className='text-base sm:text-lg font-medium'>
                                     Add New Operation Space Column
                                 </DialogTitle>
-                                <DialogDescription className='text-zinc-400'>
-                                    Enter the name and select a color for the
-                                    new Operation Space column
+                                <DialogDescription className='text-zinc-400 text-xs sm:text-sm'>
+                                    Enter the name and select a color for the new Operation Space column
                                 </DialogDescription>
                             </DialogHeader>
                             <div className='space-y-4'>
                                 <div className='space-y-2'>
                                     <Label
                                         htmlFor='operationColumnName'
-                                        className='text-sm text-zinc-400'
+                                        className='text-xs sm:text-sm text-zinc-400'
                                     >
                                         Column Name
                                     </Label>
@@ -1359,14 +1336,14 @@ const KanbanBoard: React.FC = () => {
                                                 e.target.value
                                             )
                                         }
-                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500'
+                                        className='bg-zinc-800 border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm'
                                         placeholder='Enter column name'
                                     />
                                 </div>
                                 <div className='space-y-2'>
                                     <Label
                                         htmlFor='operationColumnColor'
-                                        className='text-sm text-zinc-400'
+                                        className='text-xs sm:text-sm text-zinc-400'
                                     >
                                         Column Color
                                     </Label>
@@ -1385,16 +1362,16 @@ const KanbanBoard: React.FC = () => {
                                     />
                                 </div>
                             </div>
-                            <div className='flex gap-2 mt-6'>
+                            <div className='flex flex-col sm:flex-row gap-2 sm:gap-4 mt-6'>
                                 <Button
                                     onClick={handleAddOperationColumn}
-                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white'
+                                    className='flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2'
                                 >
                                     Add Column
                                 </Button>
                                 <Button
                                     onClick={closeNewOperationColumnModal}
-                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white'
+                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm py-2'
                                 >
                                     Cancel
                                 </Button>
@@ -1407,4 +1384,4 @@ const KanbanBoard: React.FC = () => {
     );
 };
 
-export default KanbanBoard;
+export default ManagementKanbanBoard;

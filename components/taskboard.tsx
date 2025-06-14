@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Circle, Menu, X, Edit2, Trash2 } from "lucide-react";
-import Image from "next/image";
+import { Circle, Edit2, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 // Types
 export type TaskStatus = "in-progress" | "done" | "cancelled" | "not-started";
@@ -366,7 +365,7 @@ const DeleteModal = ({
 
                 <div className='mb-6'>
                     <p className='text-zinc-400 text-xs sm:text-sm'>
-                        Are you sure you want to delete "{taskName}"?
+                        Are you sure you want to delete &quot;{taskName}&quot;?
                         This action cannot be undone.
                     </p>
                 </div>

@@ -895,7 +895,7 @@ const ManagementKanbanBoard: React.FC = () => {
                                                                         Are you sure?
                                                                     </AlertDialogTitle>
                                                                     <AlertDialogDescription className='text-zinc-400 text-xs sm:text-sm'>
-                                                                        This action cannot be undone. This will permanently delete the task "{task.title}".
+                                                                        This action cannot be undone. This will permanently delete the task &quot;{task.title}&quot;.
                                                                     </AlertDialogDescription>
                                                                 </AlertDialogHeader>
                                                                 <AlertDialogFooter className='flex flex-col sm:flex-row gap-2 sm:gap-4'>

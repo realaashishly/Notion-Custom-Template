@@ -1,23 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-    Dumbbell,
-    BookOpen,
-    Award,
-    CreditCard,
-    Users,
-    Edit,
-    Trash2,
-} from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,15 +10,32 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+    Award,
+    BookOpen,
+    CreditCard,
+    Dumbbell,
+    Edit,
+    Trash2,
+    Users,
+} from "lucide-react";
+import React, { useState } from "react";
 
 interface AreaItem {
     id: number;
     title: string;
-    icon: React.ComponentType<any>;
+    icon: React.ReactNode;
     gradient: string;
 }
 
@@ -79,31 +78,31 @@ const Areas: React.FC = () => {
         {
             id: 1,
             title: "Health & Fitness",
-            icon: Dumbbell,
+            icon: <Dumbbell />,
             gradient: "from-blue-600 via-purple-600 to-orange-600",
         },
         {
             id: 2,
             title: "Personal Development",
-            icon: BookOpen,
+            icon: < BookOpen/>,
             gradient: "from-zinc-600 via-gray-500 to-gray-400",
         },
         {
             id: 3,
             title: "Skills",
-            icon: Award,
+            icon: <Award/>,
             gradient: "from-cyan-600 via-pink-500 to-orange-500",
         },
         {
             id: 4,
             title: "Finance",
-            icon: CreditCard,
+            icon: <CreditCard/>,
             gradient: "from-yellow-600 via-orange-500 to-red-600",
         },
         {
             id: 5,
             title: "Agency Clients",
-            icon: Users,
+            icon: <Users/>,
             gradient: "from-purple-600 via-pink-500 to-orange-500",
         },
     ]);
@@ -128,7 +127,7 @@ const Areas: React.FC = () => {
         const newArea: AreaItem = {
             id: Math.max(...areas.map((a) => a.id)) + 1,
             title: formData.title.trim(),
-            icon: selectedIcon.component,
+            icon: <selectedIcon.component />,
             gradient: formData.gradient,
         };
 
@@ -150,17 +149,17 @@ const Areas: React.FC = () => {
         if (!selectedIcon) return;
 
         setAreas(
-            areas.map((area) =>
-                area.id === editingArea.id
-                    ? {
-                          ...area,
-                          title: formData.title.trim(),
-                          icon: selectedIcon.component,
-                          gradient: formData.gradient,
-                      }
-                    : area
-            )
-        );
+                    areas.map((area) =>
+                        area.id === editingArea.id
+                            ? {
+                                  ...area,
+                                  title: formData.title.trim(),
+                                  icon: <selectedIcon.component />,
+                                  gradient: formData.gradient,
+                              }
+                            : area
+                    )
+                );
 
         setIsEditDialogOpen(false);
         setEditingArea(null);
@@ -180,8 +179,9 @@ const Areas: React.FC = () => {
 
     const openEditDialog = (area: AreaItem) => {
         setEditingArea(area);
+        const iconComponent = React.isValidElement(area.icon) && area.icon.type;
         const iconName =
-            iconOptions.find((icon) => icon.component === area.icon)?.name ||
+            iconOptions.find((icon) => icon.component === iconComponent)?.name ||
             "Dumbbell";
         setFormData({
             title: area.title,
@@ -212,8 +212,6 @@ const Areas: React.FC = () => {
                 {/* Grid */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4'>
                     {areas.map((area) => {
-                        const Icon = area.icon;
-
                         return (
                             <div
                                 key={area.id}
@@ -232,10 +230,9 @@ const Areas: React.FC = () => {
                                 {/* Content */}
                                 <div className='relative h-full p-3 sm:p-4 flex flex-col justify-end'>
                                     <div className='flex items-center gap-2 sm:gap-3'>
-                                        <Icon
-                                            className='w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0'
-                                            strokeWidth={1.5}
-                                        />
+                                        <div className='w-5 h-5 sm:w-6 sm:h-6 text-white flex-shrink-0'>
+                                            {area.icon}
+                                        </div>
                                         <h3 className='text-white text-sm sm:text-base font-medium truncate'>
                                             {area.title}
                                         </h3>

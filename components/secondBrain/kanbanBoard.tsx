@@ -53,7 +53,7 @@ const KanbanBoardTask: React.FC = () => {
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [selectedColumnId, setSelectedColumnId] = useState<string>("");
+    const [_selectedColumnId, setSelectedColumnId] = useState<string>("");
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     const [taskTitle, setTaskTitle] = useState("");
@@ -599,7 +599,7 @@ const KanbanBoardTask: React.FC = () => {
 
     const getFilteredColumns = useCallback(() => {
         const today = new Date();
-        const todayStr = format(today, "yyyy-MM-dd");
+    
 
         return columns
             .filter((column) => {
@@ -969,7 +969,7 @@ const KanbanBoardTask: React.FC = () => {
                         </AlertDialogTitle>
                         <AlertDialogDescription className='text-zinc-400'>
                             This action cannot be undone. This will permanently
-                            delete the task "{selectedTask?.title}".
+                            delete the task &quot;{selectedTask?.title}&quot;.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

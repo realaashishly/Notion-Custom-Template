@@ -1,6 +1,6 @@
 "use client";
 import { ChevronLeft, ChevronRight, Edit, Plus, Trash2 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 // Event interface
 interface CalendarEvent {
@@ -608,7 +608,7 @@ const CalendarEvents: React.FC = () => {
 
                 {/* Event Dialog */}
                 <Dialog open={showEventModal} onOpenChange={setShowEventModal}>
-                    <DialogContent className='bg-zinc-900 border border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-md p-4 sm:p-6 rounded-lg'>
+                    <DialogContent className='bg-zinc-900 border border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-4xl p-4 sm:p-6 rounded-lg'>
                         <DialogHeader>
                             <DialogTitle className='text-base sm:text-lg font-medium'>
                                 {editingEvent ? "Edit Event" : "Add New Event"}

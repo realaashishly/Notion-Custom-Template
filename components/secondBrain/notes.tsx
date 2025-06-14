@@ -1,28 +1,5 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-    Star,
-    Folder,
-    Tag,
-    MapPin,
-    Calendar,
-    Clock,
-    Edit,
-    Trash,
-    Plus,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -34,8 +11,30 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import {
+    Calendar,
+    Clock,
+    Edit,
+    Folder,
+    MapPin,
+    Plus,
+    Star,
+    Tag,
+    Trash,
+} from "lucide-react";
+import React, { useState } from "react";
 
 interface Note {
     id: string;
@@ -316,7 +315,7 @@ const NotesInterface: React.FC = () => {
                                     <AlertDialogHeader>
                                         <AlertDialogTitle className='text-base sm:text-lg font-medium'>Delete Note</AlertDialogTitle>
                                         <AlertDialogDescription className='text-gray-400 text-xs sm:text-sm'>
-                                            Are you sure you want to delete "{note.title}"? This action cannot be undone.
+                                            Are you sure you want to delete &quot;{note.title}&quot;? This action cannot be undone.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter className='flex flex-col sm:flex-row gap-2 sm:gap-4'>

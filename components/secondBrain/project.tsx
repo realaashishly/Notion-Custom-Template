@@ -281,7 +281,7 @@ const ProjectCard = ({
                                 Delete Project
                             </AlertDialogTitle>
                             <AlertDialogDescription className='text-zinc-400 text-xs sm:text-sm'>
-                                Are you sure you want to delete "{project.title}"? This action cannot be undone.
+                                Are you sure you want to delete &quot;{project.title}&quot;? This action cannot be undone.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter className='flex flex-col sm:flex-row gap-2 sm:gap-4'>

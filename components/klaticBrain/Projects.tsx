@@ -697,10 +697,11 @@ const ProjectManagementDashboard: React.FC = () => {
                                                         </AlertDialogTitle>
                                                         <AlertDialogDescription className='text-zinc-400'>
                                                             Are you sure you
-                                                            want to delete "
-                                                            {task.title}"? This
-                                                            action cannot be
-                                                            undone.
+                                                            want to delete
+                                                            &quot;
+                                                            {task.title}&quot;?
+                                                            This action cannot
+                                                            be undone.
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
@@ -765,7 +766,7 @@ const ProjectManagementDashboard: React.FC = () => {
                                         tab.id !== "table" &&
                                         tabs.length > 1 && (
                                             <X
-                                                className='w-4 h-4 text-zinc-400 hover:text-zinc-300' 
+                                                className='w-4 h-4 text-zinc-400 hover:text-zinc-300'
                                                 onClick={(e) =>
                                                     removeTab(tab.id, e)
                                                 }
@@ -908,11 +909,11 @@ const ProjectManagementDashboard: React.FC = () => {
                                                                                 want
                                                                                 to
                                                                                 delete
-                                                                                "
+                                                                                &quot;
                                                                                 {
                                                                                     task.title
                                                                                 }
-                                                                                "?
+                                                                                &quot;?
                                                                                 This
                                                                                 action
                                                                                 cannot

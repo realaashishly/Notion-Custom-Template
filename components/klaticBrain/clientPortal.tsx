@@ -294,7 +294,7 @@ const ClientPortalTable: React.FC = () => {
             setColumns(columns.filter((col) => col.id !== columnId));
             setClients(
                 clients.map((client) => {
-                    const { [columnId]: removed, ...rest } = client;
+                    const { [columnId]: _removed, ...rest } = client;
                     return rest as Client;
                 })
             );

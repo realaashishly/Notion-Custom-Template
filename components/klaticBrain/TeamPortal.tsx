@@ -347,7 +347,7 @@ const TeamMembersTable: React.FC = () => {
             setColumns(columns.filter((col) => col.id !== columnId));
             setTeamMembers(
                 teamMembers.map((member) => {
-                    const { [columnId]: removed, ...rest } = member;
+                    const { [columnId]: _removed, ...rest } = member;
                     return rest as TeamMember;
                 })
             );

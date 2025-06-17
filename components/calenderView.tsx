@@ -48,12 +48,12 @@ const initialEvents: CalendarEvent[] = [
         description: "Review project deliverables",
         date: "2025-06-15",
         time: "15:00",
-        color: "#8b5cf6",
+        color: "#3b82f6",
         completed: false,
     },
 ];
 
-// Dialog Components (simplified versions since we don't have shadcn/ui)
+// Dialog Components
 const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange: (open: boolean) => void; children: React.ReactNode }) => {
     if (!open) return null;
     
@@ -111,7 +111,11 @@ const Button = ({ children, onClick, style, className }: { children: React.React
 );
 
 const CalendarEvents: React.FC = () => {
-    const [currentDate, setCurrentDate] = useState(new Date());
+    // Normalize currentDate to start of day
+    const normalizeDate = (date: Date) => {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    };
+    const [currentDate, setCurrentDate] = useState(normalizeDate(new Date()));
     const [viewMode, setViewMode] = useState<"weekly" | "monthly">("weekly");
     const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
     const [selectedDate, setSelectedDate] = useState<string>("");
@@ -123,14 +127,19 @@ const CalendarEvents: React.FC = () => {
         title: "",
         description: "",
         time: "",
-        color: "#3b82f6",
     });
 
-    const colors = ["#3b82f6", "#10b981", "#ef4444", "#8b5cf6", "#f59e0b"];
+    const colors = ["#3b82f6", "#10b981", "#ef4444"];
+
+    // Assign color based on date
+    const getColorForDate = (date: string) => {
+        const hash = date.split("-").reduce((acc, num) => acc + parseInt(num), 0);
+        return colors[hash % colors.length];
+    };
 
     // Get today's date as string
     const getTodayString = () => {
-        return formatDate(new Date());
+        return formatDate(normalizeDate(new Date()));
     };
 
     // Get days in month
@@ -145,7 +154,7 @@ const CalendarEvents: React.FC = () => {
 
     // Get week dates
     const getWeekDates = (date: Date) => {
-        const startOfWeek = new Date(date);
+        const startOfWeek = normalizeDate(date);
         const day = startOfWeek.getDay();
         startOfWeek.setDate(startOfWeek.getDate() - day);
 
@@ -160,7 +169,7 @@ const CalendarEvents: React.FC = () => {
 
     // Format date to YYYY-MM-DD
     const formatDate = (date: Date) => {
-        return date.toISOString().split("T")[0];
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     };
 
     // Get events for a specific date
@@ -184,14 +193,14 @@ const CalendarEvents: React.FC = () => {
         if (viewMode === "weekly") {
             const newDate = new Date(currentDate);
             newDate.setDate(currentDate.getDate() - 7);
-            setCurrentDate(newDate);
+            setCurrentDate(normalizeDate(newDate));
         } else {
             const newDate = new Date(
                 currentDate.getFullYear(),
                 currentDate.getMonth() - 1,
                 1
             );
-            setCurrentDate(newDate);
+            setCurrentDate(normalizeDate(newDate));
         }
     };
 
@@ -199,30 +208,25 @@ const CalendarEvents: React.FC = () => {
         if (viewMode === "weekly") {
             const newDate = new Date(currentDate);
             newDate.setDate(currentDate.getDate() + 7);
-            setCurrentDate(newDate);
+            setCurrentDate(normalizeDate(newDate));
         } else {
             const newDate = new Date(
                 currentDate.getFullYear(),
                 currentDate.getMonth() + 1,
                 1
             );
-            setCurrentDate(newDate);
+            setCurrentDate(normalizeDate(newDate));
         }
     };
 
     const goToToday = () => {
-        setCurrentDate(new Date());
+        setCurrentDate(normalizeDate(new Date()));
     };
 
     // Event management functions
     const handleDateClick = (date: string) => {
         setSelectedDate(date);
-        const dateEvents = getEventsForDate(date);
-        if (dateEvents.length > 0) {
-            setShowEventList(true);
-        } else {
-            setShowEventModal(true);
-        }
+        setShowEventList(true);
     };
 
     const handleAddEvent = () => {
@@ -233,7 +237,7 @@ const CalendarEvents: React.FC = () => {
                 description: newEvent.description,
                 date: selectedDate,
                 time: newEvent.time,
-                color: newEvent.color,
+                color: getColorForDate(selectedDate),
                 completed: false,
             };
             setEvents([...events, event]);
@@ -247,8 +251,8 @@ const CalendarEvents: React.FC = () => {
             title: event.title,
             description: event.description || "",
             time: event.time || "",
-            color: event.color,
         });
+        setSelectedDate(event.date);
         setShowEventModal(true);
         setShowEventList(false);
     };
@@ -256,7 +260,9 @@ const CalendarEvents: React.FC = () => {
     const handleUpdateEvent = () => {
         if (editingEvent && newEvent.title.trim()) {
             const updatedEvents = events.map((event) =>
-                event.id === editingEvent.id ? { ...event, ...newEvent } : event
+                event.id === editingEvent.id
+                    ? { ...event, ...newEvent, date: selectedDate, color: getColorForDate(selectedDate) }
+                    : event
             );
             setEvents(updatedEvents);
             resetEventForm();
@@ -269,13 +275,17 @@ const CalendarEvents: React.FC = () => {
     };
 
     const handleToggleComplete = (eventId: string) => {
-        setEvents(events.map(event => 
-            event.id === eventId ? { ...event, completed: !event.completed } : event
-        ));
+        setEvents(
+            events.map((event) =>
+                event.id === eventId
+                    ? { ...event, completed: !event.completed }
+                    : event
+            )
+        );
     };
 
     const resetEventForm = () => {
-        setNewEvent({ title: "", description: "", time: "", color: "#3b82f6" });
+        setNewEvent({ title: "", description: "", time: "" });
         setEditingEvent(null);
         setShowEventModal(false);
         setShowEventList(false);
@@ -299,9 +309,9 @@ const CalendarEvents: React.FC = () => {
             days.push(
                 <div
                     key={`prev-${day}`}
-                    className='min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] lg:min-h-[8rem] border border-zinc-800 bg-zinc-900/50 p-1 sm:p-2'
+                    className="min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] lg:min-h-[8rem] border border-zinc-800 bg-zinc-900/50 p-1 sm:p-2"
                 >
-                    <span className='text-zinc-600 text-xs sm:text-sm'>
+                    <span className="text-zinc-600 text-xs sm:text-sm">
                         {day}
                     </span>
                 </div>
@@ -310,18 +320,19 @@ const CalendarEvents: React.FC = () => {
 
         // Current month days
         for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(
+            const date = normalizeDate(new Date(
                 currentDate.getFullYear(),
                 currentDate.getMonth(),
                 day
-            );
+            ));
             const dateString = formatDate(date);
             const isToday = dateString === getTodayString();
+            const dayEvents = getEventsForDate(dateString);
 
             days.push(
                 <div
                     key={day}
-                    className='min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] lg:min-h-[8rem] border border-zinc-800 bg-zinc-900 p-1 sm:p-2 cursor-pointer hover:bg-zinc-800/50 transition-colors'
+                    className="min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] lg:min-h-[8rem] border border-zinc-800 bg-zinc-900 p-1 sm:p-2 cursor-pointer hover:bg-zinc-800/50 transition-colors"
                     onClick={() => handleDateClick(dateString)}
                 >
                     <div
@@ -333,7 +344,30 @@ const CalendarEvents: React.FC = () => {
                     >
                         {day}
                     </div>
-                    {/* Only show current day marker, no tasks */}
+                    <div className="space-y-1">
+                        {dayEvents.map((event) => (
+                            <div
+                                key={event.id}
+                                className={`text-xs p-1 rounded ${
+                                    event.completed
+                                        ? "line-through text-zinc-500"
+                                        : ""
+                                }`}
+                                style={{ backgroundColor: `${event.color}20` }}
+                            >
+                                <span
+                                    style={{
+                                        color: event.completed
+                                            ? undefined
+                                            : event.color,
+                                    }}
+                                >
+                                    {event.time ? `${event.time} ` : ""}
+                                    {event.title}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             );
         }
@@ -344,9 +378,9 @@ const CalendarEvents: React.FC = () => {
             days.push(
                 <div
                     key={`next-${day}`}
-                    className='min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] lg:min-h-[8rem] border border-zinc-800 bg-zinc-900/50 p-1 sm:p-2'
+                    className="min-h-[5rem] sm:min-h-[6rem] md:min-h-[7rem] lg:min-h-[8rem] border border-zinc-800 bg-zinc-900/50 p-1 sm:p-2"
                 >
-                    <span className='text-zinc-600 text-xs sm:text-sm'>
+                    <span className="text-zinc-600 text-xs sm:text-sm">
                         {day}
                     </span>
                 </div>
@@ -354,15 +388,15 @@ const CalendarEvents: React.FC = () => {
         }
 
         return (
-            <div className='grid grid-cols-7 gap-0'>
+            <div className="grid grid-cols-7 gap-0">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                     (day) => (
                         <div
                             key={day}
-                            className='p-2 sm:p-3 text-center text-zinc-400 text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-800'
+                            className="p-2 sm:p-3 text-center text-zinc-400 text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-800"
                         >
-                            <span className='hidden sm:inline'>{day}</span>
-                            <span className='sm:hidden'>{day.charAt(0)}</span>
+                            <span className="hidden sm:inline">{day}</span>
+                            <span className="sm:hidden">{day.charAt(0)}</span>
                         </div>
                     )
                 )}
@@ -376,26 +410,27 @@ const CalendarEvents: React.FC = () => {
         const weekDates = getWeekDates(currentDate);
 
         return (
-            <div className='grid grid-cols-7 gap-0'>
+            <div className="grid grid-cols-7 gap-0">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(
                     (day) => (
                         <div
                             key={day}
-                            className='p-2 sm:p-3 text-center text-zinc-400 text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-800'
+                            className="p-2 sm:p-3 text-center text-zinc-400 text-xs sm:text-sm font-medium border border-zinc-800 bg-zinc-800"
                         >
-                            <span className='hidden sm:inline'>{day}</span>
-                            <span className='sm:hidden'>{day.charAt(0)}</span>
+                            <span className="hidden sm:inline">{day}</span>
+                            <span className="sm:hidden">{day.charAt(0)}</span>
                         </div>
                     )
                 )}
                 {weekDates.map((date, index) => {
                     const dateString = formatDate(date);
                     const isToday = dateString === getTodayString();
+                    const dayEvents = getEventsForDate(dateString);
 
                     return (
                         <div
                             key={index}
-                            className='min-h-[8rem] sm:min-h-[10rem] md:min-h-[12rem] lg:min-h-[15rem] border border-zinc-800 bg-zinc-900 p-2 sm:p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors'
+                            className="min-h-[8rem] sm:min-h-[10rem] md:min-h-[12rem] lg:min-h-[15rem] border border-zinc-800 bg-zinc-900 p-2 sm:p-3 cursor-pointer hover:bg-zinc-800/50 transition-colors"
                             onClick={() => handleDateClick(dateString)}
                         >
                             <div
@@ -407,7 +442,32 @@ const CalendarEvents: React.FC = () => {
                             >
                                 {date.getDate()}
                             </div>
-                            {/* Only show current day marker, no tasks */}
+                            <div className="space-y-1">
+                                {dayEvents.map((event) => (
+                                    <div
+                                        key={event.id}
+                                        className={`text-xs p-1 rounded ${
+                                            event.completed
+                                                ? "line-through text-zinc-500"
+                                                : ""
+                                        }`}
+                                        style={{
+                                            backgroundColor: `${event.color}20`,
+                                        }}
+                                    >
+                                        <span
+                                            style={{
+                                                color: event.completed
+                                                    ? undefined
+                                                    : event.color,
+                                            }}
+                                        >
+                                            {event.time ? `${event.time} ` : ""}
+                                            {event.title}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     );
                 })}
@@ -416,20 +476,20 @@ const CalendarEvents: React.FC = () => {
     };
 
     return (
-        <div className='bg-zinc-950 text-white p-4 sm:p-6 min-h-screen'>
-            <div className='max-w-7xl mx-auto'>
+        <div className="bg-zinc-950 text-white p-4 sm:p-6 min-h-screen">
+            <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className='flex flex-col space-y-4 mb-4'>
+                <div className="flex flex-col space-y-4 mb-4">
                     <div>
-                        <h1 className='text-xl sm:text-2xl md:text-3xl font-light tracking-wider mb-4'>
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-light tracking-wider mb-4">
                             CALENDAR
                         </h1>
 
                         {/* Controls */}
-                        <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap'>
-                            <div className='flex items-center gap-4'>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 flex-wrap">
+                            <div className="flex items-center gap-4">
                                 {/* View Toggle */}
-                                <div className='flex rounded'>
+                                <div className="flex rounded">
                                     <button
                                         onClick={() => setViewMode("weekly")}
                                         className={`px-3 py-1 text-xs sm:text-sm rounded cursor-pointer ${
@@ -451,27 +511,19 @@ const CalendarEvents: React.FC = () => {
                                         Monthly View
                                     </button>
                                 </div>
-
-                                {/* Past Tasks Button */}
-                                <button
-                                    onClick={() => setShowPastTasks(true)}
-                                    className="px-3 py-1 text-xs sm:text-sm bg-yellow-600/20 text-yellow-400 rounded hover:bg-yellow-600/30 transition-colors"
-                                >
-                                    Past Tasks ({getPastIncompleteTasks().length})
-                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className='w-full bg-zinc-600 h-[1px] rounded-full' />
+                    <div className="w-full bg-zinc-600 h-[1px] rounded-full" />
 
                     <div>
                         {/* Controls */}
-                        <div className='w-full flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap'>
+                        <div className="w-full flex flex-col sm:flex-row items-start sm:items-center gap-4 flex-wrap">
                             {/* Date Navigation */}
-                            <div className='w-full flex flex-col sm:flex-row items-center justify-between gap-2'>
-                                <div className='flex items-center gap-2'>
-                                    <div className='text-base sm:text-lg md:text-xl font-light text-center w-full'>
+                            <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="text-base sm:text-lg md:text-xl font-light text-center w-full">
                                         {currentDate.toLocaleDateString(
                                             "en-US",
                                             {
@@ -482,26 +534,32 @@ const CalendarEvents: React.FC = () => {
                                     </div>
                                 </div>
 
-                                <div className='flex items-center gap-1'>
+                                <div className="flex items-center gap-1">
                                     <button
                                         onClick={navigatePrevious}
-                                        className='p-2 hover:bg-zinc-800 rounded transition-colors'
+                                        className="p-2 hover:bg-zinc-800 rounded transition-colors"
                                     >
-                                        <ChevronLeft size={16} className='sm:w-5 sm:h-5' />
+                                        <ChevronLeft
+                                            size={16}
+                                            className="sm:w-5 sm:h-5"
+                                        />
                                     </button>
 
                                     <button
                                         onClick={goToToday}
-                                        className='mx-4 py-1 px-3 text-xs sm:text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors'
+                                        className="mx-4 py-1 px-3 text-xs sm:text-sm bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
                                     >
                                         Today
                                     </button>
 
                                     <button
                                         onClick={navigateNext}
-                                        className='p-2 hover:bg-zinc-800 rounded transition-colors'
+                                        className="p-2 hover:bg-zinc-800 rounded transition-colors"
                                     >
-                                        <ChevronRight size={16} className='sm:w-5 sm:h-5' />
+                                        <ChevronRight
+                                            size={16}
+                                            className="sm:w-5 sm:h-5"
+                                        />
                                     </button>
                                 </div>
                             </div>
@@ -510,127 +568,37 @@ const CalendarEvents: React.FC = () => {
                 </div>
 
                 {/* Calendar */}
-                <div className='bg-zinc-900 rounded-lg overflow-hidden'>
+                <div className="bg-zinc-900 rounded-lg overflow-hidden">
                     {viewMode === "monthly"
                         ? renderMonthlyView()
                         : renderWeeklyView()}
                 </div>
 
-                {/* Past Tasks Modal */}
-                {showPastTasks && (
-                    <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-                        <div className='bg-zinc-900 rounded-lg p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-lg max-h-[80vh] overflow-y-auto'>
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className='text-base sm:text-lg font-medium'>
-                                    Past Incomplete Tasks
-                                </h3>
-                                <button
-                                    onClick={() => setShowPastTasks(false)}
-                                    className="text-zinc-400 hover:text-white"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-
-                            <div className='space-y-3'>
-                                {getPastIncompleteTasks().length === 0 ? (
-                                    <div className="text-zinc-400 text-center py-8">
-                                        No past incomplete tasks
-                                    </div>
-                                ) : (
-                                    getPastIncompleteTasks().map((event) => (
-                                        <div
-                                            key={event.id}
-                                            className='bg-zinc-800 rounded p-3 border-l-4 border-yellow-600'
-                                        >
-                                            <div className='flex items-start justify-between'>
-                                                <div className='flex-1'>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={event.completed}
-                                                            onChange={() => handleToggleComplete(event.id)}
-                                                            className="rounded"
-                                                        />
-                                                        <div
-                                                            className={`font-medium text-xs sm:text-sm ${event.completed ? 'line-through text-zinc-500' : ''}`}
-                                                            style={{
-                                                                color: event.completed ? undefined : event.color,
-                                                            }}
-                                                        >
-                                                            {event.title}
-                                                        </div>
-                                                    </div>
-                                                    <div className="text-xs text-yellow-400 mb-1">
-                                                        Due: {new Date(event.date).toLocaleDateString()}
-                                                        {event.time && ` at ${event.time}`}
-                                                    </div>
-                                                    {event.description && (
-                                                        <div className='text-xs sm:text-sm text-zinc-400'>
-                                                            {event.description}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className='flex gap-1 ml-2'>
-                                                    <button
-                                                        onClick={() => {
-                                                            handleEditEvent(event);
-                                                            setShowPastTasks(false);
-                                                        }}
-                                                        className='p-1 hover:bg-zinc-700 rounded'
-                                                    >
-                                                        <Edit size={14} className='sm:w-4 sm:h-4' />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDeleteEvent(event.id)}
-                                                        className='p-1 hover:bg-zinc-700 rounded text-red-400'
-                                                    >
-                                                        <Trash2 size={14} className='sm:w-4 sm:h-4' />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-
-                            <div className='flex gap-2 mt-4'>
-                                <button
-                                    onClick={() => setShowPastTasks(false)}
-                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded transition-colors text-xs sm:text-sm'
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
                 {/* Event Dialog */}
                 <Dialog open={showEventModal} onOpenChange={setShowEventModal}>
-                    <DialogContent className='bg-zinc-900 border border-zinc-700 text-white w-full max-w-[95vw] sm:max-w-4xl p-4 sm:p-6 rounded-lg'>
+                    <DialogContent className="bg-zinc-900 border border-zinc-700 text-white w-[400px] p-4 sm:p-6 rounded-lg">
                         <DialogHeader>
-                            <DialogTitle className='text-base sm:text-lg font-medium'>
+                            <DialogTitle className="text-base sm:text-lg font-medium">
                                 {editingEvent ? "Edit Event" : "Add New Event"}
                             </DialogTitle>
-                            <DialogDescription className='text-zinc-400 text-xs sm:text-sm'>
+                            <DialogDescription className="text-zinc-400 text-xs sm:text-sm">
                                 {editingEvent
                                     ? "Update your event details"
                                     : "Create a new event for your calendar"}
                             </DialogDescription>
                         </DialogHeader>
 
-                        <div className='space-y-4'>
-                            <div className='space-y-2'>
+                        <div className="space-y-4">
+                            <div className="space-y-2">
                                 <Label
-                                    htmlFor='title'
-                                    className='text-xs sm:text-sm text-zinc-400'
+                                    htmlFor="title"
+                                    className="text-xs sm:text-sm text-zinc-400"
                                 >
                                     Title
                                 </Label>
                                 <Input
-                                    id='title'
-                                    type='text'
+                                    id="title"
+                                    type="text"
                                     value={newEvent.title}
                                     onChange={(e) =>
                                         setNewEvent({
@@ -638,20 +606,20 @@ const CalendarEvents: React.FC = () => {
                                             title: e.target.value,
                                         })
                                     }
-                                    className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm px-3 py-2 rounded'
-                                    placeholder='Event title'
+                                    className="w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm px-3 py-2 rounded"
+                                    placeholder="Event title"
                                 />
                             </div>
 
-                            <div className='space-y-2'>
+                            <div className="space-y-2">
                                 <Label
-                                    htmlFor='description'
-                                    className='text-xs sm:text-sm text-zinc-400'
+                                    htmlFor="description"
+                                    className="text-xs sm:text-sm text-zinc-400"
                                 >
                                     Description
                                 </Label>
                                 <Textarea
-                                    id='description'
+                                    id="description"
                                     value={newEvent.description}
                                     onChange={(e) =>
                                         setNewEvent({
@@ -659,21 +627,21 @@ const CalendarEvents: React.FC = () => {
                                             description: e.target.value,
                                         })
                                     }
-                                    className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 h-20 text-xs sm:text-sm px-3 py-2 rounded resize-none'
-                                    placeholder='Event description'
+                                    className="w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 h-20 text-xs sm:text-sm px-3 py-2 rounded resize-none"
+                                    placeholder="Event description"
                                 />
                             </div>
 
-                            <div className='space-y-2'>
+                            <div className="space-y-2">
                                 <Label
-                                    htmlFor='time'
-                                    className='text-xs sm:text-sm text-zinc-400'
+                                    htmlFor="time"
+                                    className="text-xs sm:text-sm text-zinc-400"
                                 >
                                     Time
                                 </Label>
                                 <Input
-                                    id='time'
-                                    type='time'
+                                    id="time"
+                                    type="time"
                                     value={newEvent.time}
                                     onChange={(e) =>
                                         setNewEvent({
@@ -681,51 +649,26 @@ const CalendarEvents: React.FC = () => {
                                             time: e.target.value,
                                         })
                                     }
-                                    className='w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm px-3 py-2 rounded'
+                                    className="w-full bg-zinc-800 border border-zinc-700 text-white focus:border-zinc-500 text-xs sm:text-sm px-3 py-2 rounded"
                                 />
-                            </div>
-
-                            <div className='space-y-2'>
-                                <Label className='text-xs sm:text-sm text-zinc-400'>
-                                    Color
-                                </Label>
-                                <div className='flex gap-2 flex-wrap'>
-                                    {colors.map((color) => (
-                                        <button
-                                            key={color}
-                                            onClick={() =>
-                                                setNewEvent({
-                                                    ...newEvent,
-                                                    color,
-                                                })
-                                            }
-                                            className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 transition-all cursor-pointer ${
-                                                newEvent.color === color
-                                                    ? "border-white scale-110"
-                                                    : "border-zinc-600 hover:border-zinc-400"
-                                            }`}
-                                            style={{ backgroundColor: color }}
-                                        />
-                                    ))}
-                                </div>
                             </div>
                         </div>
 
-                        <div className='flex gap-2 mt-6 flex-col sm:flex-row'>
+                        <div className="flex gap-2 mt-6 flex-col sm:flex-row">
                             <Button
                                 onClick={
                                     editingEvent
                                         ? handleUpdateEvent
                                         : handleAddEvent
                                 }
-                                style={{ backgroundColor: newEvent.color }}
-                                className='flex-1 hover:opacity-80 text-white text-xs sm:text-sm py-2 px-4 rounded transition-opacity'
+                                style={{ backgroundColor: getColorForDate(selectedDate) }}
+                                className="flex-1 hover:opacity-80 text-white text-xs sm:text-sm py-2 px-4 rounded transition-opacity"
                             >
                                 {editingEvent ? "Update Event" : "Add Event"}
                             </Button>
                             <Button
                                 onClick={resetEventForm}
-                                className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm py-2 px-4 rounded transition-colors'
+                                className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white text-xs sm:text-sm py-2 px-4 rounded transition-colors"
                             >
                                 Cancel
                             </Button>
@@ -735,92 +678,132 @@ const CalendarEvents: React.FC = () => {
 
                 {/* Event List Modal */}
                 {showEventList && (
-                    <div className='fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50'>
-                        <div className='bg-zinc-900 rounded-lg p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-md'>
-                            <h3 className='text-base sm:text-lg font-medium mb-4'>
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+                        <div className="bg-zinc-900 rounded-lg p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-md">
+                            <h3 className="text-base sm:text-lg font-medium mb-4">
                                 Events for{" "}
                                 {new Date(selectedDate).toLocaleDateString()}
                             </h3>
 
-                            <div className='space-y-3 max-h-64 overflow-y-auto'>
-                                {getEventsForDate(selectedDate).map((event) => (
-                                    <div
-                                        key={event.id}
-                                        className={`bg-zinc-800 rounded p-3 ${isPastDate(event.date) && !event.completed ? 'border-l-4 border-yellow-600' : ''}`}
-                                    >
-                                        <div className='flex items-start justify-between'>
-                                            <div className='flex-1'>
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={event.completed}
-                                                        onChange={() => handleToggleComplete(event.id)}
-                                                        className="rounded"
-                                                    />
-                                                    <div
-                                                        className={`font-medium text-xs sm:text-sm ${event.completed ? 'line-through text-zinc-500' : ''}`}
-                                                        style={{
-                                                            color: event.completed ? undefined : event.color,
-                                                        }}
-                                                    >
-                                                        {event.title}
+                            <div className="space-y-3 max-h-64 overflow-y-auto">
+                                {getEventsForDate(selectedDate).length === 0 ? (
+                                    <div className="text-zinc-400 text-center py-4">
+                                        No events for this date
+                                    </div>
+                                ) : (
+                                    getEventsForDate(selectedDate).map(
+                                        (event) => (
+                                            <div
+                                                key={event.id}
+                                                className={`bg-zinc-800 rounded p-3 ${
+                                                    isPastDate(event.date) &&
+                                                    !event.completed
+                                                        ? "border-l-4 border-yellow-600"
+                                                        : ""
+                                                }`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={
+                                                                    event.completed
+                                                                }
+                                                                onChange={() =>
+                                                                    handleToggleComplete(
+                                                                        event.id
+                                                                    )
+                                                                }
+                                                                className="rounded"
+                                                            />
+                                                            <div
+                                                                className={`font-medium text-xs sm:text-sm ${
+                                                                    event.completed
+                                                                        ? "line-through text-zinc-500"
+                                                                        : ""
+                                                                }`}
+                                                                style={{
+                                                                    color: event.completed
+                                                                        ? undefined
+                                                                        : event.color,
+                                                                }}
+                                                            >
+                                                                {event.title}
+                                                            </div>
+                                                        </div>
+                                                        {isPastDate(
+                                                            event.date
+                                                        ) &&
+                                                            !event.completed && (
+                                                                <div className="text-xs text-yellow-400 mb-1">
+                                                                    Overdue
+                                                                </div>
+                                                            )}
+                                                        {event.description && (
+                                                            <div className="text-xs sm:text-sm text-zinc-400 mt-1">
+                                                                {
+                                                                    event.description
+                                                                }
+                                                            </div>
+                                                        )}
+                                                        {event.time && (
+                                                            <div className="text-xs text-zinc-500 mt-1">
+                                                                {event.time}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex gap-1 ml-2">
+                                                        <button
+                                                            onClick={() =>
+                                                                handleEditEvent(
+                                                                    event
+                                                                )
+                                                            }
+                                                            className="p-1 cursor-pointer rounded"
+                                                        >
+                                                            <Edit
+                                                                size={14}
+                                                                className="sm:w-4 sm:h-4"
+                                                            />
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleDeleteEvent(
+                                                                    event.id
+                                                                )}
+                                                            className="p-1 cursor-pointer rounded text-red-600"
+                                                        >
+                                                            <Trash2
+                                                                size={14}
+                                                                className="sm:w-4 sm:h-4"
+                                                            />
+                                                        </button>
                                                     </div>
                                                 </div>
-                                                {isPastDate(event.date) && !event.completed && (
-                                                    <div className="text-xs text-yellow-400 mb-1">
-                                                        Overdue
-                                                    </div>
-                                                )}
-                                                {event.description && (
-                                                    <div className='text-xs sm:text-sm text-zinc-400 mt-1'>
-                                                        {event.description}
-                                                    </div>
-                                                )}
-                                                {event.time && (
-                                                    <div className='text-xs text-zinc-500 mt-1'>
-                                                        {event.time}
-                                                    </div>
-                                                )}
                                             </div>
-                                            <div className='flex gap-1 ml-2'>
-                                                <button
-                                                    onClick={() =>
-                                                        handleEditEvent(event)
-                                                    }
-                                                    className='p-1 hover:bg-zinc-700 rounded'
-                                                >
-                                                    <Edit size={14} className='sm:w-4 sm:h-4' />
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleDeleteEvent(
-                                                            event.id
-                                                        )
-                                                    }
-                                                    className='p-1 hover:bg-zinc-700 rounded text-red-400'
-                                                >
-                                                    <Trash2 size={14} className='sm:w-4 sm:h-4' />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                                        )
+                                    )
+                                )}
                             </div>
 
-                            <div className='flex gap-2 mt-4 flex-col sm:flex-row'>
+                            <div className="flex gap-2 mt-4 flex-col sm:flex-row">
                                 <button
                                     onClick={() => {
                                         setShowEventList(false);
                                         setShowEventModal(true);
                                     }}
-                                    className='flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-xs sm:text-sm'
-                                >
-                                    <Plus size={16} className='sm:w-5 sm:h-5' />
+                                    className="flex w-full sm:w-1/2 items-center justify-center cursor-pointer gap-2 px-2 sm:px-2 py-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors text-xs sm:text-sm"
+                                    >
+                                    <Plus
+                                        size={16}
+                                        className="sm:w-5 sm:h-5"
+                                    />
                                     Add Event
                                 </button>
                                 <button
                                     onClick={() => setShowEventList(false)}
-                                    className='flex-1 bg-zinc-700 hover:bg-zinc-600 text-white py-2 rounded transition-colors text-xs sm:text-sm'
+                                    className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white cursor-pointer py-2 px-4 rounded transition-colors text-xs sm:text-sm font-semibold"
                                 >
                                     Close
                                 </button>

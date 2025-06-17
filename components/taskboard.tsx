@@ -20,7 +20,7 @@ export interface Task {
 
 // Helper function to calculate days left
 function calculateDaysLeft(
-    startDate: string,
+    // startDate: string,
     endDate: string,
     status: TaskStatus
 ) {
@@ -408,7 +408,6 @@ export default function TaskBoard() {
         endDate: string;
     }) => {
         const daysLeft = calculateDaysLeft(
-            taskData.startDate,
             taskData.endDate,
             taskData.status
         );
@@ -467,7 +466,6 @@ export default function TaskBoard() {
     const handleStatusChange = (task: Task) => {
         const newStatus = getNextStatus(task.status);
         const daysLeft = calculateDaysLeft(
-            task.dateRange[0],
             task.dateRange[1],
             newStatus
         );

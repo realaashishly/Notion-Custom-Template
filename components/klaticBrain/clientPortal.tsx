@@ -291,11 +291,19 @@ const ClientPortalTable: React.FC = () => {
 
     const handleRemoveColumn = (columnId: keyof Client) => {
         if (columns.length > 1) {
+            // Filter out the column
             setColumns(columns.filter((col) => col.id !== columnId));
+
+            // Update clients, safely removing the specified property
             setClients(
                 clients.map((client) => {
-                    const { [columnId]: _removed, ...rest } = client;
-                    return rest as Client;
+                    // Create a shallow copy of the client object
+                    const updatedClient = { ...client };
+                    // Only delete the property if it exists
+                    if (columnId in updatedClient) {
+                        delete updatedClient[columnId];
+                    }
+                    return updatedClient as Client;
                 })
             );
         }

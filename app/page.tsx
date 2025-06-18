@@ -15,7 +15,7 @@ import TaskBoard from "@/components/taskboard";
 export default function Home() {
     return (
         <div className='flex flex-col gap-6 bg-zinc-950 '>
-            <CalendarEvents />
+            {/* <CalendarEvents />
             <ManagementKanbanBoard/>
             <PlatformsAccounts/>
             <TaskBoard />
@@ -23,12 +23,12 @@ export default function Home() {
             <KanbanBoard />
             <Areas />
             <NotesInterface />
-            <KanbanBoardTask/>
+            <KanbanBoardTask/> */}
             <WorldClock/>
 
-            <ProjectManagementDashboard/>
+            {/* <ProjectManagementDashboard/>
             <ClientPortalTable/>
-            <TeamMembersTable/>
+            <TeamMembersTable/> */}
         </div>
     );
 }

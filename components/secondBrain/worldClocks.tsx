@@ -179,7 +179,7 @@ const Clock: React.FC<ClockProps> = ({ timezone, time }) => {
 };
 
 const WorldClock: React.FC = () => {
-    const [_currentTime, setCurrentTime] = useState<Date>(new Date());
+    const [, setCurrentTime] = useState<Date>(new Date());
 
     const timezones: TimeZone[] = [
         { name: "IST", zone: "Asia/Kolkata", label: "India (IST)" },

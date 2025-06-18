@@ -121,7 +121,6 @@ const CalendarEvents: React.FC = () => {
     const [selectedDate, setSelectedDate] = useState<string>("");
     const [showEventModal, setShowEventModal] = useState(false);
     const [showEventList, setShowEventList] = useState(false);
-    const [showPastTasks, setShowPastTasks] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
     const [newEvent, setNewEvent] = useState({
         title: "",
@@ -175,12 +174,6 @@ const CalendarEvents: React.FC = () => {
     // Get events for a specific date
     const getEventsForDate = (date: string) => {
         return events.filter((event) => event.date === date);
-    };
-
-    // Get past incomplete tasks
-    const getPastIncompleteTasks = () => {
-        const today = getTodayString();
-        return events.filter((event) => event.date < today && !event.completed);
     };
 
     // Check if date is past

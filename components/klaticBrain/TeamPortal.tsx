@@ -344,11 +344,19 @@ const TeamMembersTable: React.FC = () => {
 
     const handleRemoveColumn = (columnId: keyof TeamMember) => {
         if (columns.length > 1) {
+            // Filter out the column
             setColumns(columns.filter((col) => col.id !== columnId));
+
+            // Update teamMembers, safely removing the specified property
             setTeamMembers(
                 teamMembers.map((member) => {
-                    const { [columnId]: _removed, ...rest } = member;
-                    return rest as TeamMember;
+                    // Create a shallow copy of the member object
+                    const updatedMember = { ...member };
+                    // Only delete the property if it exists
+                    if (columnId in updatedMember) {
+                        delete updatedMember[columnId];
+                    }
+                    return updatedMember as TeamMember;
                 })
             );
         }

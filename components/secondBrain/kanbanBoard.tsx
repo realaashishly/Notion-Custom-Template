@@ -16,7 +16,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
     Popover,
@@ -24,7 +23,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format, isSameDay, isSameMonth, isWithinInterval, subDays, addDays } from "date-fns";
+import { format, isSameDay, isSameMonth, isWithinInterval, addDays } from "date-fns";
 import {
     CalendarIcon,
     Edit,
@@ -60,7 +59,7 @@ const KanbanBoardTask: React.FC = () => {
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [selectedColumnId, setSelectedColumnId] = useState<string>("");
+    const [, setSelectedColumnId] = useState<string>("");
     const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
     const [taskTitle, setTaskTitle] = useState("");
@@ -182,7 +181,7 @@ const KanbanBoardTask: React.FC = () => {
 
         setColumns((prev) => {
             const columnExists = prev.some((col) => col.date === formattedDate);
-            let updatedColumns = columnExists
+            const updatedColumns = columnExists
                 ? prev.map((column) =>
                       column.date === formattedDate
                           ? { ...column, tasks: [...column.tasks, newTask] }
@@ -875,7 +874,7 @@ const KanbanBoardTask: React.FC = () => {
                         </AlertDialogTitle>
                         <AlertDialogDescription className='text-zinc-400'>
                             This action cannot be undone. This will permanently
-                            delete the task "{selectedTask?.title}".
+                            delete the task &quot;{selectedTask?.title}&quot;.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
